@@ -30,7 +30,7 @@ for i in range(0, endpointCount):
 	mastodon.append(Mastodon(sys.argv[1+(3*i)], access_token=sys.argv[2+(3*i)], api_base_url=sys.argv[3+(3*i)]))
 
 rate=15*60*60 # boost every fifteen minutes by default
-if(len(sys.argv)>endpointCount*3):
+if(len(sys.argv)>endpointCount*3+1):
 	rate=int(sys.argv[endpointCount*3+1])
 
 while True:
@@ -68,13 +68,12 @@ while True:
 								mastodon[other].status_reblog(tootId)
 								boostedToots.append(tootId)
 								favFreq=rank; done=True; count+=1
+								pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
+								time.sleep(5)
 							except:
 								pass
 				print("Boosted "+str(count-startCount)+" toots from node "+sys.argv[3+(i*3)]+" -- fav freq="+str(rank))
 
-	boostedToots2=pickle.load(open("boostedToots.pickle", "r"))
-	boostedToots2.extend(boostedToots)
-	boostedToots=list(set(boostedToots2))
 	pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
 	print("Boosted "+str(count)+" toots -- fav freq "+str(favFreq))
 	end=time.time()
