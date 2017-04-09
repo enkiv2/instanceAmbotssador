@@ -59,7 +59,7 @@ while True:
 		done=False
 		if(fk[0]>maxRank[i]):
 			maxRank[i]=fk[0]
-		elif(iterations%1000 == 0): # decay threshhold
+		elif(iterations%10 == 0): # decay threshhold
 			maxRank[i]-=1
 		for rank in fk:
 			if(rank==0): # don't bother boosting anything with zero favs
