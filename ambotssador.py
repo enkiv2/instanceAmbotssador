@@ -52,19 +52,22 @@ while True:
 				tlS[i][favs]=[tootId]
 		fk=tlS[i].keys()
 		fk.sort()
+		fk.reverse()
 		done=False
 		for rank in fk:
-			if(fk[rank]==0): # don't bother boosting anything with zero favs
+			if(rank==0): # don't bother boosting anything with zero favs
 				break
 			if(done):
 				break
 			for tootId in fk[rank]:
+				startCount=count
 				if not (tootId in boostedToots):
 					for other in range(0, endpointCount):
 						if other != i:
 							mastodon[other].status_reblog(tootId)
 							boostedToots.append(tootId)
 							favFreq=rank; done=True; count+=1
+				print("Boosted "+str(count-startCount)+" toots from node "+sys.argv[3+(i*3)]+" -- fav freq="+str(rank))
 
 	boostedToots2=pickle.load(open("boostedToots.pickle", "r"))
 	boostedToots2.extend(boostedToots)
