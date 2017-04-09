@@ -59,7 +59,7 @@ while True:
 				break
 			if(done):
 				break
-			for tootId in fk[rank]:
+			for tootId in tlS[rank]:
 				startCount=count
 				if not (tootId in boostedToots):
 					for other in range(0, endpointCount):
