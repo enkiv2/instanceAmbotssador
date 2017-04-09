@@ -59,14 +59,17 @@ while True:
 				break
 			if(done):
 				break
-			for tootId in tlS[rank]:
+			for tootId in tlS[i][rank]:
 				startCount=count
 				if not (tootId in boostedToots):
 					for other in range(0, endpointCount):
 						if other != i:
-							mastodon[other].status_reblog(tootId)
-							boostedToots.append(tootId)
-							favFreq=rank; done=True; count+=1
+							try:
+								mastodon[other].status_reblog(tootId)
+								boostedToots.append(tootId)
+								favFreq=rank; done=True; count+=1
+							except:
+								pass
 				print("Boosted "+str(count-startCount)+" toots from node "+sys.argv[3+(i*3)]+" -- fav freq="+str(rank))
 
 	boostedToots2=pickle.load(open("boostedToots.pickle", "r"))
