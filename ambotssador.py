@@ -15,7 +15,7 @@ except:
 from mastodon import Mastodon
 
 boostedToots=[]
-if os.path.exists("boostedToots.pickle")
+if os.path.exists("boostedToots.pickle"):
 	boostedToots=pickle.load(open("boostedToots.pickle", "r"))
 
 if(len(sys.argv)<=6):
