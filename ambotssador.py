@@ -21,16 +21,17 @@ else:
 	pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
 
 if(len(sys.argv)<=6):
-	print("Usage: ambotssador client_key_1 user_key_1 api_base_url_1 client_key_2 user_key_2 api_base_url_2 [cycle_length]")
+	print("Usage: ambotssador client_key_1 user_key_1 api_base_url_1 client_key_2 user_key_2 api_base_url_2 [ ... client_key_n user_key_n api_base_url_n] [cycle_length]")
 	sys.exit(1)
 
 mastodon=[]
-for i in [0, 1]:
+endpointCount=len(sys.argv)/3
+for i in range(0, endpointCount):
 	mastodon.append(Mastodon(sys.argv[1+(3*i)], access_token=sys.argv[2+(3*i)], api_base_url=sys.argv[3+(3*i)]))
 
 rate=15*60*60 # boost every fifteen minutes by default
-if(len(sys.argv)>7):
-	rate=int(sys.argv[7])
+if(len(sys.argv)>endpointCount*3):
+	rate=int(sys.argv[endpointCount*3+1])
 
 while True:
 	start=time.time()
@@ -41,11 +42,7 @@ while True:
 	tlS=[{}, {}]
 	count=0
 	favFreq=0
-	for i in [0, 1]:
-		if i==0:
-			other=1
-		else:
-			other=0
+	for i in range(0, endpointCount):
 		for toot in tl[i]:
 			favs=toot["favourites_count"]
 			tootId=toot["id"]
@@ -63,9 +60,11 @@ while True:
 				break
 			for tootId in fk[rank]:
 				if not (tootId in boostedToots):
-					mastodon[other].status_reblog(tootId)
-					boostedToots.append(tootId)
-					favFreq=rank; done=True; count+=1
+					for other in range(0, endpointCount):
+						if other != i:
+							mastodon[other].status_reblog(tootId)
+							boostedToots.append(tootId)
+							favFreq=rank; done=True; count+=1
 
 	boostedToots2=pickle.load(open("boostedToots.pickle", "r"))
 	boostedToots2.extend(boostedToots)
