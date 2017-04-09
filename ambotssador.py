@@ -17,6 +17,8 @@ from mastodon import Mastodon
 boostedToots=[]
 if os.path.exists("boostedToots.pickle"):
 	boostedToots=pickle.load(open("boostedToots.pickle", "r"))
+else:
+	pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
 
 if(len(sys.argv)<=6):
 	print("Usage: ambotssador client_key_1 user_key_1 api_base_url_1 client_key_2 user_key_2 api_base_url_2 [cycle_length]")
@@ -65,7 +67,10 @@ while True:
 					boostedToots.append(tootId)
 					favFreq=rank; done=True; count+=1
 
-	boostedToots=pickle.dump(open("boostedToots.pickle", "w"))
+	boostedToots2=pickle.load(open("boostedToots.pickle", "r"))
+	boostedToots2.extend(boostedToots)
+	boostedToots=list(set(boostedToots2))
+	pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
 	print("Boosted "+str(count)+" toots -- fav freq")
 	end=time.time()
 	delta=end-start
