@@ -33,6 +33,9 @@ rate=15*60*60 # boost every fifteen minutes by default
 if(len(sys.argv)>endpointCount*3+1):
 	rate=int(sys.argv[endpointCount*3+1])
 
+maxRank=[0]*endpointCount
+
+iterations=0
 while True:
 	start=time.time()
 	tl=[]
@@ -54,10 +57,16 @@ while True:
 		fk.sort()
 		fk.reverse()
 		done=False
+		if(fk[0]>maxRank[i]):
+			maxRank[i]=fk[0]
+		elif(iterations%1000 == 0): # decay threshhold
+			maxRank[i]-=1
 		for rank in fk:
 			if(rank==0): # don't bother boosting anything with zero favs
 				break
 			if(done):
+				break
+			if(maxRank[i]-rank>2):
 				break
 			for tootId in tlS[i][rank]:
 				startCount=count
@@ -76,6 +85,7 @@ while True:
 
 	pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
 	print("Boosted "+str(count)+" toots -- fav freq "+str(favFreq))
+	iterations+=1
 	end=time.time()
 	delta=end-start
 	if(delta<rate):
