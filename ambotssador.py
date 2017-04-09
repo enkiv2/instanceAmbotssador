@@ -36,10 +36,10 @@ if(len(sys.argv)>endpointCount*3):
 while True:
 	start=time.time()
 	tl=[]
-	for i in [0, 1]:
+	for i in range(0, endpointCount):
 		tl.append(mastodon[i].timeline_local(limit=1000))
 
-	tlS=[{}, {}]
+	tlS=[{}]*endpointCount
 	count=0
 	favFreq=0
 	for i in range(0, endpointCount):
