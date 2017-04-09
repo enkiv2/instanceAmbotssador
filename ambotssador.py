@@ -71,7 +71,7 @@ while True:
 	boostedToots2.extend(boostedToots)
 	boostedToots=list(set(boostedToots2))
 	pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
-	print("Boosted "+str(count)+" toots -- fav freq")
+	print("Boosted "+str(count)+" toots -- fav freq "+str(favFreq))
 	end=time.time()
 	delta=end-start
 	if(delta<rate):
