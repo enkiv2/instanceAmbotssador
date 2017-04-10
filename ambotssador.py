@@ -66,8 +66,8 @@ while True:
 				break
 			if(done):
 				break
-			if(maxRank[i]-rank>2):
-				break
+			if(maxRank[i]-rank>5):
+				done=True
 			for tootId in tlS[i][rank]:
 				startCount=count
 				if not (tootId in boostedToots):
@@ -75,12 +75,15 @@ while True:
 						if other != i:
 							try:
 								mastodon[other].status_reblog(tootId)
-								boostedToots.append(tootId)
-								favFreq=rank; done=True; count+=1
-								pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
-								time.sleep(5)
+								time.sleep(1)
+								done=True
 							except:
 								pass
+					favFreq=rank; count+=1
+					boostedToots.append(tootId)
+					boostedToots=list(set(boostedToots))
+					pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
+					time.sleep(1)
 				print("Boosted "+str(count-startCount)+" toots from node "+sys.argv[3+(i*3)]+" -- fav freq="+str(rank))
 
 	pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
