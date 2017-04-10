@@ -85,10 +85,12 @@ while True:
 						boostedToots=list(set(boostedToots))
 						pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
 						time.sleep(1)
-					print("Boosted "+str(count-startCount)+" toots from node "+sys.argv[3+(i*3)]+" -- fav freq="+str(rank))
+					if(count>startCount):
+						print("Boosted "+str(count-startCount)+" toots from node "+sys.argv[3+(i*3)]+" -- fav freq="+str(rank))
 
-		pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
-		print("Boosted "+str(count)+" toots -- fav freq "+str(favFreq))
+		if(count>0):
+			pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
+			print("Boosted "+str(count)+" toots -- fav freq "+str(favFreq))
 		iterations+=1
 		end=time.time()
 		delta=end-start
