@@ -24,10 +24,12 @@ if(len(sys.argv)<=6):
 	print("Usage: ambotssador client_key_1 user_key_1 api_base_url_1 client_key_2 user_key_2 api_base_url_2 [ ... client_key_n user_key_n api_base_url_n] [cycle_length]")
 	sys.exit(1)
 
+print("Connecting...")
 mastodon=[]
 endpointCount=len(sys.argv)/3
 for i in range(0, endpointCount):
-	mastodon.append(Mastodon(sys.argv[1+(3*i)], access_token=sys.argv[2+(3*i)], api_base_url=sys.argv[3+(3*i)]))
+	mastodon.append(Mastodon(client_id=sys.argv[1+(3*i)], access_token=sys.argv[2+(3*i)], api_base_url=sys.argv[3+(3*i)]))
+print("Connected to "+str(endpointCount)+" nodes")
 
 rate=15*60*60 # boost every fifteen minutes by default
 if(len(sys.argv)>endpointCount*3+1):
@@ -49,7 +51,7 @@ while True:
 		for i in range(0, endpointCount):
 			for toot in tl[i]:
 				favs=toot["favourites_count"]
-				tootId=toot["id"]
+				tootId=toot["url"]
 				if favs in tlS[i]:
 					tlS[i][favs].append(tootId)
 				else:
@@ -75,11 +77,40 @@ while True:
 						for other in range(0, endpointCount):
 							if other != i:
 								try:
-									mastodon[other].status_reblog(tootId)
+									mastodon[other].toot("Boosting from "+sys.argv[3+(3*i)]+": "+tootId+", with "+str(rank)+" favorites")
 									time.sleep(1)
 									done=True
-								except:
-									pass
+								except Exception as e:
+									print("Error posting to "+sys.argv[3+(other*3)]+":")
+									print(e)
+									retrySuccess=False
+									for retries in range(0, 3):
+										if(retrySuccess):
+											break
+										try:
+											print("Reconnecting to "+sys.argv[3+(other*3)])
+											mastodon[other]=Mastodon(
+												client_id=sys.argv[1+(3*other)],
+												access_token=sys.argv[2+(3*other)],
+												api_base_url=sys.argv[3+(3*other)])
+											print("Reconnected")
+											time.sleep(1+retries*10)
+											print("Retrying post")
+											mastodon[other].toot("Boosting from "+sys.argv[3+(3*i)]+": "+tootId+", with "+str(rank)+" favorites")
+											retrySuccess=True
+											done=True
+										except Exception as f:
+											print(f)
+											time.sleep(1+retries*10)
+									if not retrySuccess:
+										print("Failed; removing from list")
+										mastodon=mastodon[:other]+mastodon[other+1:]
+										tl=tl[:other]+tl[other+1:]
+										tlS=tlS[:other]+tlS[other+1:]
+										sys.argv=sys.argv[:3*other+1]+sys.argv[3*other+4:]
+										endpointCount-=1
+										break
+									
 						favFreq=rank; count+=1
 						boostedToots.append(tootId)
 						boostedToots=list(set(boostedToots))
@@ -96,11 +127,15 @@ while True:
 		delta=end-start
 		if(delta<rate):
 			time.sleep(rate-delta)
-	except:
+	except Exception as e:
+		print(e)
+		print("Reconnecting in 60s")
 		# If we have an error in getting timeline, wait 60 seconds & then reconnect to all instances
 		time.sleep(60)
+		print("Reconnecting")
 		mastodon=[]
 		for i in range(0, endpointCount):
-			mastodon.append(Mastodon(sys.argv[1+(3*i)], access_token=sys.argv[2+(3*i)], api_base_url=sys.argv[3+(3*i)]))
+			mastodon.append(Mastodon(client_id=sys.argv[1+(3*i)], access_token=sys.argv[2+(3*i)], api_base_url=sys.argv[3+(3*i)]))
+		print("Reconnected")
 
 
