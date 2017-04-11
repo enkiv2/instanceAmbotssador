@@ -6,6 +6,8 @@ import codecs
 UTF8Writer = codecs.getwriter('utf8')
 sys.stdout = UTF8Writer(sys.stdout)
 
+import traceback
+
 try:
 	import cPickle as pickle
 except:
@@ -43,15 +45,20 @@ while True:
 		start=time.time()
 		tl=[]
 		for i in range(0, endpointCount):
-			tl.append(mastodon[i].timeline_local(limit=1000))
+			try:
+				tl.append(mastodon[i].timeline_local(limit=1000))
+			except:
+				tl.append([])
 
 		tlS=[{}]*endpointCount
 		count=0
 		favFreq=0
 		for i in range(0, endpointCount):
+			tootInfo={}
 			for toot in tl[i]:
 				favs=toot["favourites_count"]
 				tootId=toot["url"]
+				tootInfo[tootId]=toot
 				if favs in tlS[i]:
 					tlS[i][favs].append(tootId)
 				else:
@@ -77,12 +84,21 @@ while True:
 						for other in range(0, endpointCount):
 							if other != i:
 								try:
-									mastodon[other].toot("Boosting from "+sys.argv[3+(3*i)]+": "+tootId+", with "+str(rank)+" favorites")
-									time.sleep(1)
+									msgbase="\n(Boosting from "+sys.argv[3+(3*i)]+": "+tootId+", with "+str(rank)+" favorites)"
+									user_components=tootId.split("/")
+									username="@".join([user_components[3], user_components[2]])
+									orig=username+" "+tootInfo[tootId]["content"].replace("<p>", "\n").replace("</p>", "\n")
+									print(orig)
+									if(len(orig)>500-len(msgbase)):
+										orig=orig[:500-len(msgbase)-4]+"..."
+									print(orig+msgbase)
+									mastodon[other].toot(orig+msgbase)
+									time.sleep(10)
 									done=True
 								except Exception as e:
 									print("Error posting to "+sys.argv[3+(other*3)]+":")
 									print(e)
+									traceback.print_exc()
 									retrySuccess=False
 									for retries in range(0, 3):
 										if(retrySuccess):
@@ -96,11 +112,21 @@ while True:
 											print("Reconnected")
 											time.sleep(1+retries*10)
 											print("Retrying post")
-											mastodon[other].toot("Boosting from "+sys.argv[3+(3*i)]+": "+tootId+", with "+str(rank)+" favorites")
+											msgbase="\n(Boosting from "+sys.argv[3+(3*i)]+": "+tootId+", with "+str(rank)+" favorites)"
+											user_components=tootId.split("/")
+											username="@".join([user_components[3], user_components[2]])
+											orig=username+" "+tootInfo[tootId]["content"].replace("<p>", "\n").replace("</p>", "\n")
+											print(orig)
+											if(len(orig)>500-len(msgbase)):
+												orig=orig[:500-len(msgbase)-4]+"..."
+											print(orig+msgbase)
+											mastodon[other].toot(orig+msgbase)
+											time.sleep(10)
 											retrySuccess=True
 											done=True
 										except Exception as f:
 											print(f)
+											traceback.print_exc()
 											time.sleep(1+retries*10)
 									if not retrySuccess:
 										print("Failed; removing from list")
@@ -115,7 +141,7 @@ while True:
 						boostedToots.append(tootId)
 						boostedToots=list(set(boostedToots))
 						pickle.dump(boostedToots, open("boostedToots.pickle", "w"))
-						time.sleep(1)
+						time.sleep(10)
 					if(count>startCount):
 						print("Boosted "+str(count-startCount)+" toots from node "+sys.argv[3+(i*3)]+" -- fav freq="+str(rank))
 
@@ -129,6 +155,7 @@ while True:
 			time.sleep(rate-delta)
 	except Exception as e:
 		print(e)
+		traceback.print_exc()
 		print("Reconnecting in 60s")
 		# If we have an error in getting timeline, wait 60 seconds & then reconnect to all instances
 		time.sleep(60)
